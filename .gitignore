@@ -163,7 +163,7 @@ cython_debug/
 .vs/
 
 # ignore course_note
-.course_note/
+course_note/
 
 # ignore matlab code folder
-.matlab/
+matlab/
