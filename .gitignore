@@ -166,4 +166,4 @@ cython_debug/
 .course_note/
 
 # ignore matlab code folder
-.matlab/
+matlab/
