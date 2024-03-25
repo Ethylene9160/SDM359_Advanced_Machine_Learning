@@ -167,3 +167,10 @@ course_note/
 
 # ignore matlab code folder
 matlab/
+
+# ignore ppt, doc, pdt
+*.ppt
+*.pptx
+*.doc
+*.docx
+*.pdf
