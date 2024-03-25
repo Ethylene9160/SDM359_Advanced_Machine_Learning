@@ -174,3 +174,6 @@ matlab/
 *.doc
 *.docx
 *.pdf
+
+# ignore zip
+*.zip
