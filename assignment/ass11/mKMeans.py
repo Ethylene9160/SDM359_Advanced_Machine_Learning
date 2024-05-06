@@ -205,7 +205,7 @@ class SoftKMeans(KMeansPlus):
 
     def update_centroids(self, X, responsibilities):
         # 使用责任值作为权重来更新质心
-        new_centroids = np.dot(responsibilities.T, X) / np.sum(responsibilities, axis=0)[:, np.newaxis]
+        new_centroids = np.dot(responsibilities.T**self.beta, X) / np.sum(responsibilities**self.beta, axis=0)[:, np.newaxis]
         return new_centroids
 
     def fit(self, X, n_init = 10):
@@ -366,18 +366,23 @@ class EnhancedSoftKMeans(SoftKMeans):
 class SoftKMeansForAss(SoftKMeans):
     def __init__(self, k=3, epochs=300, tol=1e-6, beta=1.0, eta = 1.0):
         super().__init__(k, epochs, tol, beta)
-        self.eta = eta
+
+        self.eta_value = eta
+        self.eta = None
 
     def calculate_responsibilities(self, X):
-        # 计算每个点到每个质心的距离
-        distances = self.calculate_distances(X, self.centroids)**2
-        # 计算软分配概率（责任）
-        # 使用负的beta值乘以距离来计算指数
-        exp_distances = np.exp(-self.beta * distances)
-        # 计算归一化的责任
-        # responsibilities = exp_distances / np.sum(exp_distances, axis=1, keepdims=True)
-
-        responsibilities = 1/(1+(distances/self.eta)**(1/(self.beta-1)))
+        responsibilities = np.zeros((len(X), self.k))
+        for i in range(len(X)):
+            # distances = np.sum((X[i] - self.centroids)**2, axis=1)
+            distances = np.linalg.norm(X[i] - self.centroids, axis=1)
+            for k in range(self.k):
+                numerator = distances[k]
+                # if numerator == 0:
+                #     responsibilities[i] = np.zeros(self.k)
+                #     responsibilities[i, k] = 1
+                #     continue
+                denominator = numerator**2/self.eta[i]
+                responsibilities[i, k] = 1 / (1+denominator**(1/(self.beta-1)))
         return responsibilities
 
     def fit_possibilities(self, X, n_init = 10, init_centroids = None):
@@ -411,6 +416,7 @@ class SoftKMeansForAss(SoftKMeans):
         return self
     def fit(self, X, n_init = 10, init_centroids = None):
         # self.centroids = self.init_centroids(X)
+        self.eta = np.full(len(X), self.eta_value)
         if init_centroids is not None:
             self.centroids = init_centroids
         else:
@@ -436,3 +442,43 @@ class SoftKMeansForAss(SoftKMeans):
         # 最终的责任用于确定每个点最有可能属于哪个簇
         self.labels_ = np.argmax(responsibilities, axis=1)
         return self
+
+    def hardknn(self, responsibilities, X, y, k):
+        # 找到距离y最近的k个点
+        distances = np.linalg.norm(X - y, axis=1)
+        # distances = np.sum((X - y)**2, axis=1)
+        # distances = np.sqrt(distances)
+        # print('distances:', distances)
+        indices = np.argsort(distances)
+        # 找到label为1的点和label为2的点，分别计算隶属度。
+
+class KMeansForAss(KMeansPlus):
+    def fit(self, X, n_init=10, init_centroids=None):
+        best_inertia = np.inf
+        best_centroids = None
+        best_labels = None
+
+        if init_centroids is not None:
+            self.centroids = init_centroids
+        else:
+            self.init_centroids(X)
+
+        for i in range(self.epochs):
+            super().fit(X)
+
+        # for _ in range(n_init):
+        #     self.init_centroids(X)
+        #     super().fit(X)
+        #     inertia = self.loss(X)
+        #
+        #     if inertia < best_inertia:
+        #         best_inertia = inertia
+        #         best_centroids = self.centroids
+        #         best_labels = self.labels_
+
+        # self.centroids = best_centroids
+        # self.labels_ = best_labels
+        # self.inertia_ = best_inertia
+        return self
+
+
