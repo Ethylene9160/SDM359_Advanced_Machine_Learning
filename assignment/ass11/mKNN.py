@@ -29,9 +29,10 @@ def calculate_responsibilities(X, centroids, beta):
     return responsibilities
 
 class CrispKNN:
-    def __init__(self, X, labels):
+    def __init__(self, X, labels, beta=2.0):
         self.X = X
         self.labels = labels
+        self.beta = beta
 
     def knn(self, k, y):
         """
