@@ -1,18 +1,31 @@
 import numpy as np
 
-def calculate_responsibilities(X, centroids, beta,k=2):
+def _distance_square(x1, x2):
+    n = len(x1)
+    sum = 0
+    for i in range(n):
+        sum += (x1[i]-x2[i])**2
+    return sum
+
+def calculate_responsibilities(X, centroids, beta):
+    k = len(centroids)
+    lx = len(X)
     responsibilities = np.zeros((len(X), k))
-    for i in range(len(X)):
+    # print('len of x: ' ,len(X))
+    for i in range(lx):
         # distances = np.sum((X[i] - self.centroids)**2, axis=1)
         distances = np.linalg.norm(X[i] - centroids, axis=1)
-        for k in range(k):
-            numerator = distances[k]
+        for j in range(k):
+            # numerator = np.sqrt(_distance_square(X[i], centroids[k]))
+            numerator = distances[j]
+            # print(f'the {i}-{j}-th iter, numerator is {numerator} and distances sum is {np.sum(distances)}')
             if numerator == 0:
                 responsibilities[i] = np.zeros(k)
-                responsibilities[i, k] = 1
+                responsibilities[i, j] = 1
                 continue
             denominator = np.sum((numerator / distances) ** (2 / (beta - 1)))
-            responsibilities[i, k] = 1 / denominator
+            responsibilities[i, j] = 1 / denominator
+
     return responsibilities
 
 class CrispKNN:
@@ -92,7 +105,7 @@ class FuzzyKNN(CrispKNN):
 
         # Calculate membership scores for each class using soft labels and weights
         membership_scores = np.zeros(len(np.unique(self.labels)))  # Assuming labels are 0 and 1
-
+        # membership_scores = {0:0.0,1:0.0}
         for i, index in enumerate(nearest_indices):
             # For each class, accumulate the product of soft labels and weights
             membership_scores += self.softlabels[index] * weights[i]
@@ -102,5 +115,5 @@ class FuzzyKNN(CrispKNN):
 
         # Determine the class with the highest membership score
         # predicted_class = np.argmax(membership_scores)
-
-        return membership_scores
+        res = {0:membership_scores[0], 1:membership_scores[1]}
+        return res
