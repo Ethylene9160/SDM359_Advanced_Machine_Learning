@@ -453,6 +453,8 @@ class SoftKMeansForAss(SoftKMeans):
         # 找到label为1的点和label为2的点，分别计算隶属度。
 
 class KMeansForAss(KMeansPlus):
+    def __init__(self, k=3, epochs=300, tol=1e-6):
+        super().__init__(k, epochs, tol)
     def fit(self, X, n_init=10, init_centroids=None):
         best_inertia = np.inf
         best_centroids = None
@@ -464,7 +466,35 @@ class KMeansForAss(KMeansPlus):
             self.init_centroids(X)
 
         for i in range(self.epochs):
-            super().fit(X)
+            # 分配样本到最近的质心
+            distances = self.calculate_distances(X, self.centroids)
+            labels = np.argmin(distances, axis=1)
+
+            # 计算新的质心
+            new_centroids = []
+            for j in range(self.k):
+                # 获取属于质心j的所有点
+                assigned_points = X[labels == j]
+                # 如果有点分配给质心，则计算平均值；否则重新选择一个点作为质心
+                if assigned_points.size > 0:
+                    new_centroids.append(assigned_points.mean(axis=0))
+                else:
+                    #保持原来的质心
+                    new_centroids.append(self.centroids[j])
+                #     new_centroids.append(X[np.random.choice(X.shape[0])])
+            # print(new_centroids)
+            # 将列表转换为NumPy数组
+            new_centroids = np.array(new_centroids)
+
+            # # 检查质心是否变化很小
+            # if np.all(np.abs(new_centroids - self.centroids) <= self.tol):
+            #     break
+
+            self.centroids = new_centroids
+
+        self.labels_ = labels
+        # for i in range(self.epochs):
+        #     KMeans.fit(X)
 
         # for _ in range(n_init):
         #     self.init_centroids(X)
@@ -479,6 +509,40 @@ class KMeansForAss(KMeansPlus):
         # self.centroids = best_centroids
         # self.labels_ = best_labels
         # self.inertia_ = best_inertia
+        return self
+
+    def _lajide_fit(self, X):
+        if self.k > len(X):
+            raise ValueError("k cannot be greater than the number of data points.")
+
+        # 初始化质心，随机选取输入样本。
+        # self.centroids = X[np.random.choice(X.shape[0], self.k, replace=False)]
+        for i in range(self.epochs):
+            # 分配样本到最近的质心
+            distances = self.calculate_distances(X, self.centroids)
+            labels = np.argmin(distances, axis=1)
+
+            # 计算新的质心
+            new_centroids = []
+            for j in range(self.k):
+                # 获取属于质心j的所有点
+                assigned_points = X[labels == j]
+                # 如果有点分配给质心，则计算平均值；否则重新选择一个点作为质心
+                if assigned_points.size > 0:
+                    new_centroids.append(assigned_points.mean(axis=0))
+                # else:
+                #     new_centroids.append(X[np.random.choice(X.shape[0])])
+            print(new_centroids)
+            # 将列表转换为NumPy数组
+            new_centroids = np.array(new_centroids)
+
+            # 检查质心是否变化很小
+            if np.all(np.abs(new_centroids - self.centroids) <= self.tol):
+                break
+
+            self.centroids = new_centroids
+
+        self.labels_ = labels
         return self
 
 
