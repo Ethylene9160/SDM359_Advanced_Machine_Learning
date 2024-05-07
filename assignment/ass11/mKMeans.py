@@ -205,6 +205,7 @@ class SoftKMeans(KMeansPlus):
 
     def update_centroids(self, X, responsibilities):
         # 使用责任值作为权重来更新质心
+        # new_centroids = np.dot(responsibilities.T, X) / np.sum(responsibilities, axis=0)[:,np.newaxis]
         new_centroids = np.dot(responsibilities.T**self.beta, X) / np.sum(responsibilities**self.beta, axis=0)[:, np.newaxis]
         return new_centroids
 
@@ -375,14 +376,17 @@ class SoftKMeansForAss(SoftKMeans):
         for i in range(len(X)):
             # distances = np.sum((X[i] - self.centroids)**2, axis=1)
             distances = np.linalg.norm(X[i] - self.centroids, axis=1)
+
+            # print(f'distance^2-{i}: {distances**2}')
             for k in range(self.k):
                 numerator = distances[k]
-                # if numerator == 0:
-                #     responsibilities[i] = np.zeros(self.k)
-                #     responsibilities[i, k] = 1
-                #     continue
+                if numerator == 0:
+                    responsibilities[i] = np.zeros(self.k)
+                    responsibilities[i, k] = 1
+                    continue
                 denominator = numerator**2/self.eta[i]
                 responsibilities[i, k] = 1 / (1+denominator**(1/(self.beta-1)))
+        # print('responsibilities: ', responsibilities)
         return responsibilities
 
     def fit_possibilities(self, X, n_init = 10, init_centroids = None):
