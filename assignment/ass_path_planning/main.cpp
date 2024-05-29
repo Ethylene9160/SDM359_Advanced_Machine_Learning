@@ -28,6 +28,6 @@ int main(int a, char* args[]){
     }
     cout << id2name[output[0]];
     cout << "\ncost: " << cost << std::endl;
-
+    cin.get();
     return 0;
 }
