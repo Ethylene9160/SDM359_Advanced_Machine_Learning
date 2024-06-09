@@ -180,5 +180,5 @@ for hyperbox in hyperboxes:
     plt.gca().add_patch(polygon)
 plt.xlabel('x')
 plt.ylabel('y')
-plt.title('Evolving Clusters with Rotatable Hyperboxes init')
+plt.title('Evolving Clusters with Rotatable Hyperboxes Final')
 plt.show()
